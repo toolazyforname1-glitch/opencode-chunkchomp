@@ -1,31 +1,50 @@
 {
-  "name": "opencode-chunkchomp",
+  "name": "chunkchomp",
   "version": "1.0.0",
-  "description": "Context compaction for OpenCode: flags oversized tool output, the model compacts it, nothing is lost.",
+  "description": "Context compaction for OpenCode: flags oversized tool output, the model replaces it with a dense summary, the original stays on disk.",
   "type": "module",
   "license": "MIT",
-  "private": false,
+  "author": {
+    "name": "toolazyforname1-glitch"
+  },
+  "homepage": "https://github.com/toolazyforname1-glitch/opencode-chunkchomp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toolazyforname1-glitch/opencode-chunkchomp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/toolazyforname1-glitch/opencode-chunkchomp/issues"
+  },
+  "main": "./src/chunkchomp.v1.js",
   "exports": {
-    ".": "./src/chunkchomp.v2.js"
+    ".": "./src/chunkchomp.v2.js",
+    "./v1": "./src/chunkchomp.v1.js"
   },
   "files": [
     "src",
     "tools",
+    "docs",
     "chunkchomp.txt",
-    "install.bat",
+    "INSTRUCTIONS.template.md",
     "README.md",
     "DEV.md",
-    "VERIFY.md"
+    "LICENSE"
   ],
-  "bin": {
-    "chunkchomp-install": "./install.mjs"
-  },
-  "scripts": {
-    "validate": "node --check src/chunkchomp.v1.js && node --check src/chunkchomp.v2.js",
-    "install:v1": "node install.mjs --non-interactive --target=%USERPROFILE%/.config/opencode/plugins",
-    "build:exe": "bun build --compile --minify install.mjs --outfile dist/chunkchomp-install.exe"
-  },
   "engines": {
     "node": ">=18"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "context",
+    "compaction",
+    "tokens",
+    "tokenizer",
+    "plugin",
+    "llm",
+    "ai"
+  ],
+  "scripts": {
+    "validate": "node --check src/chunkchomp.v1.js && node --check src/chunkchomp.v2.js"
   }
 }
