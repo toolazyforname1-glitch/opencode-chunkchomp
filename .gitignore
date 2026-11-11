@@ -1,0 +1,18 @@
+# never ship machine-specific state
+node_modules/
+dist/
+*.exe
+*.lnk
+
+# runtime state
+chunkcomp/state/
+*.log
+
+# editors
+.vscode/
+.idea/
+.DS_Store
+
+# rust build output
+engine/target/
+*.pdb

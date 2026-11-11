@@ -1,0 +1,31 @@
+{
+  "name": "opencode-chunkchomp",
+  "version": "1.0.0",
+  "description": "Context compaction for OpenCode: flags oversized tool output, the model compacts it, nothing is lost.",
+  "type": "module",
+  "license": "MIT",
+  "private": false,
+  "exports": {
+    ".": "./src/chunkchomp.v2.js"
+  },
+  "files": [
+    "src",
+    "tools",
+    "chunkchomp.txt",
+    "install.bat",
+    "README.md",
+    "DEV.md",
+    "VERIFY.md"
+  ],
+  "bin": {
+    "chunkchomp-install": "./install.mjs"
+  },
+  "scripts": {
+    "validate": "node --check src/chunkchomp.v1.js && node --check src/chunkchomp.v2.js",
+    "install:v1": "node install.mjs --non-interactive --target=%USERPROFILE%/.config/opencode/plugins",
+    "build:exe": "bun build --compile --minify install.mjs --outfile dist/chunkchomp-install.exe"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

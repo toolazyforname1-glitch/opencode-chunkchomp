@@ -1,0 +1,125 @@
+# ============================================================
+#  chunkchomp settings
+#  Plain text: key = value        (# starts a comment)
+#  Save the file, done. Re-read on the next request, no restart.
+#  A shortcut to this file sits in ~/.config/opencode .
+#  MIRRORED BUILD: any change here must also land in the Claude Code
+#  build. Contract: Documents/Directories/chunkchomp-parity.md
+# ============================================================
+
+# Master switch. false = plugin does nothing at all.
+enabled = true
+
+
+# ------------------------------------------------------------
+# WHEN A CHUNK GETS FLAGGED
+# ------------------------------------------------------------
+
+# Minimum size for a chunk to be flagged. Roof limit: 2000 tokens.
+# Real tokens of the tool output, counted with the tokenizer of the
+# model family you are using. 1000 tokens is roughly:
+#   4.3 KB English prose, 3.0 KB code, 2.5 KB JSON, 1.4 KB CJK.
+thresholdTokens = 2000
+
+# Per-tool overrides, comma separated. tool:value
+# Example:  toolThresholds = read:4000, bash:1000
+toolThresholds =
+
+
+# ------------------------------------------------------------
+# TAG TYPES
+# ------------------------------------------------------------
+# Two tags exist:
+#   !COMPACT  MANDATORY - context is at or past the limit below,
+#             every flagged chunk must be compacted.
+#   ?COMPACT  OPTIONAL  - context is still small, the model decides
+#             whether the chunk is worth compacting.
+# A chunk flagged ?COMPACT turns !COMPACT by itself once the
+# conversation crosses the limit.
+
+# Context size (in tokens, whole conversation) at which ?COMPACT
+# becomes !COMPACT.
+mandatoryAfterTokens = 150000
+
+
+# ------------------------------------------------------------
+# SUMMARY
+# ------------------------------------------------------------
+
+# No length cap. A summary can be as long or as short as the chunk
+# needs; only an empty one is rejected.
+
+# freshWindow is dead: a flag is sticky. Once a chunk is flagged its
+# ID stays valid until you compact it, however many requests later.
+# Left here only so old configs keep loading.
+
+
+# ------------------------------------------------------------
+# MEASUREMENT
+# ------------------------------------------------------------
+
+# Use the real tokenizer of the model family in use.
+# DeepSeek V4.1 Flash is pinned to its own build (~/chunkchomp/tokenizer.json).
+# Everything else uses ~/chunkchomp/tok/ :
+#   exact  : deepseek-v4, glm, ling, ring, mimo, minimax, qwen,
+#            longcat, hunyuan, seed, step, nemotron, trinity,
+#            inkling, laguna, beam, gpt
+#   proxy  : gemini, claude, llama, gemma  (no public tokenizer, o200k)
+#   rest   : calibrated estimate, no file needed
+# Native Rust sidecar. auto = use it when present, fall back to the JS
+# tokenizer, then to estimates. rust = require it. js = never use it.
+engine = auto
+
+# Explicit path to chunkchomp-engine.exe. Empty = next to the plugin, then
+# ~/.config/opencode/chunkchomp/.
+enginePath =
+
+useTokenizer = true
+
+# Fallback prose baseline, chars per token. The calibrated table is
+# scaled by (this / 4.24). Leave alone unless you want to bias every
+# estimate up or down.
+charsPerToken = 4.24
+
+
+# ------------------------------------------------------------
+# WHEN THE PLUGIN RUNS
+# ------------------------------------------------------------
+
+# Restrict to these provider/model pairs, comma separated, * wildcards.
+# EMPTY = every model.
+# Example:  activeModels = opencode-go/*, opencode/deepseek*
+activeModels =
+
+
+# ------------------------------------------------------------
+# NEVER FLAGGED   (comma separated lists)
+# ------------------------------------------------------------
+# Always raw, no matter what: system prompt, AGENTS.md, user
+# messages, thinking.
+
+# Exact tool names. Empty = nothing is excluded.
+protectedTools =
+
+# Extra tool names. Kept separate so blanking protectedTools does not
+# lose the safety list above.
+ignoreTools =
+
+# Tool-name prefixes. MCP tools arrive as <server>_<tool>, so
+# "codegraph_" covers every codegraph tool.
+# Example:  ignoreToolPrefixes = codegraph_, sequential-thinking_
+ignoreToolPrefixes =
+
+# Whole MCP servers. Matches "<server>_*" and "mcp__<server>__*".
+# Example:  ignoreMcpServers = exa, context7
+ignoreMcpServers =
+
+# Path prefixes, case-insensitive. Output of read/write/edit calls
+# whose target path starts with one of these is never flagged.
+# Example:  ignorePathPrefixes = C:\Users\cattu\Documents\private, node_modules
+ignorePathPrefixes =
+
+# Shell command prefixes, case-insensitive, matched as typed.
+# Output of matching bash calls is never flagged.
+# Example:  ignoreCommandPrefixes = git push, docker, curl
+ignoreCommandPrefixes =

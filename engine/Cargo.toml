@@ -1,0 +1,15 @@
+[package]
+name = "chunkchomp-engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokenizers = "0.20"
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
+codegen-units = 1
+panic = "abort"
