@@ -9,6 +9,9 @@ import { spawn } from "child_process";
 import { homedir } from "os";
 import { pathToFileURL } from "url";
 
+// Portable/sandbox config root: CHUNKCHOMP_CONFIG_DIR, then XDG_CONFIG_HOME, then ~/.config/opencode.
+var CONFIG_ROOT = process.env.CHUNKCHOMP_CONFIG_DIR || (process.env.XDG_CONFIG_HOME ? join(process.env.XDG_CONFIG_HOME, "opencode") : join(homedir(), ".config", "opencode"));
+
 // OpenCode 2 has no @opencode-ai/plugin, and this file only needs the tiny
 // builder surface the compact_chunk definition uses, so shim it locally.
 function schemaNode(type) {
@@ -24,7 +27,7 @@ var tool = Object.assign((def) => def, {
 });
 
 // --- tokenizers (per model family) -------------------------------------------
-var TOKDIR = join(homedir(), ".config", "opencode", "chunkchomp", "tok");
+var TOKDIR = join(CONFIG_ROOT, "chunkchomp", "tok");
 var FAMILIES = [
   { id: "deepseek-v41", file: "deepseek-v41.json", re: /deepseek[^a-z0-9]*v?4[._-]?1/i, proxy: false },
   { id: "deepseek-v4", file: "deepseek-v4.json", re: /deepseek/i, proxy: false },
@@ -50,7 +53,7 @@ var FAMILIES = [
   { id: "gemma", file: "gpt.json", re: /gemma|palm/i, proxy: true }
 ];
 var SPECIFIC = [
-  { id: "deepseek-v41", re: /deepseek[^a-z0-9]*v?4[._-]?1/i, file: "tokenizer.json", dir: join(homedir(), ".config", "opencode", "chunkchomp"), proxy: false }
+  { id: "deepseek-v41", re: /deepseek[^a-z0-9]*v?4[._-]?1/i, file: "tokenizer.json", dir: join(CONFIG_ROOT, "chunkchomp"), proxy: false }
 ];
 function resolveFor(modelID) {
   const id = String(modelID ?? "");
@@ -119,7 +122,7 @@ function statsFlush() {
     writeFileSync(join(dirname(CONFIG_PATH), "stats.json"), JSON.stringify(STATS));
   } catch {}
 }
-var STATUS_PATH = join(homedir(), ".config", "opencode", "chunkchomp-status.txt");
+var STATUS_PATH = join(CONFIG_ROOT, "chunkchomp-status.txt");
 var LAST_STATUS = 0;
 var STATUS_TIMER = null;
 function writeStatus(cfg, force) {
@@ -193,7 +196,7 @@ function engineFile(cfg) {
   if (cfg.enginePath)
     return cfg.enginePath;
   const a = join(dirname(CONFIG_PATH), "engine.exe");
-  const b = join(homedir(), ".config", "opencode", "chunkchomp", "engine.exe");
+  const b = join(CONFIG_ROOT, "chunkchomp", "engine.exe");
   return existsSync(a) ? a : b;
 }
 function rustSpawn(cfg) {
@@ -281,7 +284,7 @@ async function lib() {
   try {
     LIB = await import("@huggingface/tokenizers");
   } catch {
-    const p = join(homedir(), ".config", "opencode", "node_modules", "@huggingface", "tokenizers", "dist", "tokenizers.mjs");
+    const p = join(CONFIG_ROOT, "node_modules", "@huggingface", "tokenizers", "dist", "tokenizers.mjs");
     LIB = await import(pathToFileURL(p).href);
   }
   return LIB;
@@ -470,7 +473,7 @@ function ignoredTool(part, opts) {
 // --- model gate -------------------------------------------------------------
 var LAST_MODEL = (() => {
   try {
-    const s = readFileSync(join(homedir(), ".omo", ".last-model"), "utf-8").trim();
+    const s = readFileSync(join(process.env.OMO_HOME || join(homedir(), ".omo"), ".last-model"), "utf-8").trim();
     const i = s.indexOf("/");
     if (i > 0)
       return { providerID: s.slice(0, i), modelID: s.slice(i + 1) };
@@ -666,8 +669,8 @@ async function buildChunks(msgs, opts = DEFAULT_OPTS, modelID = "") {
 }
 
 // src/chunkchomp.js
-var DIR = join(homedir(), ".config", "opencode", "chunkchomp");
-var CONFIG_PATH = process.env.CHUNKCHOMP_CONFIG || join(homedir(), ".config", "opencode", "plugins", "chunkchomp.txt");
+var DIR = join(CONFIG_ROOT, "chunkchomp");
+var CONFIG_PATH = process.env.CHUNKCHOMP_CONFIG || join(CONFIG_ROOT, "plugins", "chunkchomp.txt");
 var DEFAULTS = {
   ...DEFAULT_OPTS,
   enabled: true,

@@ -95,6 +95,14 @@ From source: `install.bat` at the repo root does the same.
 OpenCode 1.18+ or 2.x. Windows for the `.exe` installer; the plugin itself is plain ESM and runs
 wherever OpenCode does. Node 18+ only for the optional CLI tools.
 
+## Changelog
+
+### 1.0.1
+- Portable config root in both entries: `CHUNKCHOMP_CONFIG_DIR`, then `XDG_CONFIG_HOME/opencode`, then `~/.config/opencode`.
+- V2 adapter verified against OpenCode 2.3.2 in an isolated XDG sandbox: plugin loads and `compact_chunk` executes.
+- `~/.omo/.last-model` fallback now honors `OMO_HOME`.
+- Installer rebuilt with the updated sources.
+
 ## License
 
 MIT.
