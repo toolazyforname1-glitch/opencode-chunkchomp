@@ -775,7 +775,8 @@ function policy(cfg) {
     "- A flag is sticky: an ID stays valid for many later requests until you compact it, and an optional one becomes mandatory by itself once the context crosses the limit.",
     "- Compressible: tool outputs and assistant text. Never: system prompt, AGENTS.md, user messages, thinking, or the command that produced a tool output.",
     `- Never flagged: chunks under ${Math.round(cfg.thresholdTokens)} tokens.`,
-    "- Summary: 3-8 bullets. Paths, names, numbers, exact error strings, decisions, open questions.",
+    "- Two fields only: chunk_id and summary. summary is required and must not be empty. No minimum or maximum length.",
+    "- Summary content: paths, names, numbers, exact error strings, decisions, open questions.",
     "- The summary replaces that chunk's body from the next request onward. The original stays on disk.",
     "- Never write a chunk header in your reply or reasoning; it is stripped from your output."
   ].join(`
@@ -1043,11 +1044,10 @@ ${arr[i]}`;
     },
     tool: {
       compact_chunk: tool({
-        description: "Replace a chunk's body with a dense summary you write. Use it on every chunk tagged !COMPACT from the current request, before continuing. Older chunks, protected tools and chunks under the size threshold are rejected.",
+        description: "Replace a chunk's body with a summary you write. Call it for every chunk tagged !COMPACT or ?COMPACT in the current request. Exactly two fields: chunk_id and summary. summary is required and must not be empty. There is no minimum or maximum length.",
         args: {
-          chunk_id: tool.schema.string().describe('Chunk key exactly as tagged, e.g. "3.1"'),
-          summary: tool.schema.string().describe("3-8 bullets: paths, names, numbers, exact error strings, decisions, open questions"),
-          reason: tool.schema.string().optional().describe("One line: why this content is no longer needed verbatim")
+          chunk_id: tool.schema.string().describe('The chunk key exactly as tagged, e.g. "3.1"'),
+          summary: tool.schema.string().describe("Required, non-empty. What the chunk contained and what still matters: paths, names, numbers, exact error strings, decisions, open questions. Bullets are fine. No length limit; write as much as the content needs.")
         },
         async execute(args, ctx) {
           const cfg = config();
@@ -1076,7 +1076,7 @@ ${arr[i]}`;
           const summary = String(args.summary ?? "").trim();
           if (!summary)
             return "REJECTED: empty summary.";
-          st.replaced.set(partId, { summary, wasChars: rec.outBytes, key, reason: String(args.reason ?? "").slice(0, 200) });
+          st.replaced.set(partId, { summary, wasChars: rec.outBytes, key });
           rec.flagged = false;
           persist(st);
           const pct = rec.outBytes ? Math.round((1 - summary.length / rec.outBytes) * 100) : 0;
@@ -1176,9 +1176,8 @@ export default Plugin.define({
           input: {
             type: "object",
             properties: {
-              chunk_id: { type: "string", description: 'Chunk key exactly as tagged, e.g. "3.1"' },
-              summary: { type: "string", description: "3-8 bullets: paths, names, numbers, exact error strings, decisions, open questions" },
-              reason: { type: "string", description: "One line: why this content is no longer needed verbatim" }
+              chunk_id: { type: "string", description: 'The chunk key exactly as tagged, e.g. "3.1"' },
+              summary: { type: "string", description: "Required, non-empty. What the chunk contained and what still matters: paths, names, numbers, exact error strings, decisions, open questions. Bullets are fine. No length limit; write as much as the content needs." }
             },
             required: ["chunk_id", "summary"],
             additionalProperties: false
