@@ -1044,10 +1044,10 @@ ${arr[i]}`;
     },
     tool: {
       compact_chunk: tool({
-        description: "Replace a chunk's body with a summary you write. Call it for every chunk tagged !COMPACT or ?COMPACT in the current request. Exactly two fields: chunk_id and summary. summary is required and must not be empty. There is no minimum or maximum length.",
+        description: "Replace an oversized chunk's raw body with a dense summary YOU write. The summary is the ONLY thing that remains in context afterwards - put the entire gist into the required 'summary' string. Never leave summary empty. Never put the explanation in any other field; there are no other fields. Copy over the decisions, verdicts, numbers, paths, exact errors and residual items that must survive. Call this for every chunk tagged !COMPACT or ?COMPACT in the current request. No length limit - longer is fine.",
         args: {
-          chunk_id: tool.schema.string().describe('The chunk key exactly as tagged, e.g. "3.1"'),
-          summary: tool.schema.string().describe("Required, non-empty. What the chunk contained and what still matters: paths, names, numbers, exact error strings, decisions, open questions. Bullets are fine. No length limit; write as much as the content needs.")
+          chunk_id: tool.schema.string().describe('The chunk key exactly as tagged, e.g. "603.2"'),
+          summary: tool.schema.string().describe("REQUIRED. The actual replacement text for the chunk, written by you - everything worth keeping from the original output. Bullets. Never empty. No length limit: include the verdict, decisions, exact numbers/paths/errors and what still remains to be done.")
         },
         async execute(args, ctx) {
           const cfg = config();
@@ -1176,8 +1176,8 @@ export default Plugin.define({
           input: {
             type: "object",
             properties: {
-              chunk_id: { type: "string", description: 'The chunk key exactly as tagged, e.g. "3.1"' },
-              summary: { type: "string", description: "Required, non-empty. What the chunk contained and what still matters: paths, names, numbers, exact error strings, decisions, open questions. Bullets are fine. No length limit; write as much as the content needs." }
+              chunk_id: { type: "string", description: 'The chunk key exactly as tagged, e.g. "603.2"' },
+              summary: { type: "string", description: "REQUIRED. The actual replacement text for the chunk, written by you - everything worth keeping from the original output. Bullets. Never empty. No length limit: include the verdict, decisions, exact numbers/paths/errors and what still remains to be done." }
             },
             required: ["chunk_id", "summary"],
             additionalProperties: false

@@ -1,6 +1,6 @@
 {
   "name": "chunkchomp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Context compaction for OpenCode: flags oversized tool output, the model replaces it with a dense summary, the original stays on disk.",
   "type": "module",
   "license": "MIT",
