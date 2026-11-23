@@ -2,6 +2,12 @@
 
 ## 1.0.3 - 2026-11-21
 
+- Fixed the policy never reaching the model on OpenCode 2. V2 passes system as an array of {type, text} objects; the plugin pushed a bare string, which the host dropped silently. It now pushes an object when the array holds objects, so the injected protocol is actually in context (verified: the model can quote it).
+- compact_chunk schema simplified: one-line description, terse field docs, chunk_id and summary required, reason optional again. No length limits.
+
+
+## 1.0.3 - 2026-11-21
+
 - Tool description now states that the summary string is the ONLY thing that remains in context, that it must be written in full there, and that there are no other fields to put it in.
 - Summary argument renamed in docs: REQUIRED, bullets, no length limit, include verdict/decisions/numbers/paths/errors/next steps.
 

@@ -775,7 +775,7 @@ function policy(cfg) {
     "- A flag is sticky: an ID stays valid for many later requests until you compact it, and an optional one becomes mandatory by itself once the context crosses the limit.",
     "- Compressible: tool outputs and assistant text. Never: system prompt, AGENTS.md, user messages, thinking, or the command that produced a tool output.",
     `- Never flagged: chunks under ${Math.round(cfg.thresholdTokens)} tokens.`,
-    "- Two fields only: chunk_id and summary. summary is required and must not be empty. No minimum or maximum length.",
+    "- Fields: chunk_id (required), summary (required, non-empty, any length), reason (optional one-liner).",
     "- Summary content: paths, names, numbers, exact error strings, decisions, open questions.",
     "- The summary replaces that chunk's body from the next request onward. The original stays on disk.",
     "- Never write a chunk header in your reply or reasoning; it is stripped from your output."
@@ -874,8 +874,10 @@ var ChunkChomp = async () => {
       const arr = output?.system;
       if (!Array.isArray(arr) || arr.length === 0)
         return;
-      if (arr.some((s) => typeof s === "string" && s.includes(MARKER)))
+      const entryText = (s) => (typeof s === "string" ? s : s && typeof s.text === "string" ? s.text : "");
+      if (arr.some((s) => entryText(s).includes(MARKER)))
         return;
+      const asObject = typeof arr[0] === "object" && arr[0] !== null;
       const label = (s) => {
         const head = String(s).split(`
 `).slice(0, 3).join(" ");
@@ -884,12 +886,15 @@ var ChunkChomp = async () => {
         return "system";
       };
       for (let i = 0;i < arr.length; i++) {
-        if (typeof arr[i] !== "string" || arr[i].startsWith("[S"))
+        const txt = entryText(arr[i]);
+        if (!txt || txt.startsWith("[S"))
           continue;
-        arr[i] = `[S${i + 1} | ${label(arr[i])} | raw]
-${arr[i]}`;
+        const tagged = `[S${i + 1} | ${label(txt)} | raw]
+${txt}`;
+        arr[i] = asObject ? { ...arr[i], text: tagged } : tagged;
       }
-      arr.push(policy(cfg));
+      const pol = policy(cfg);
+      arr.push(asObject ? { type: "text", text: pol } : pol);
     },
     "experimental.chat.messages.transform": async (input, output) => {
       try {
@@ -1044,10 +1049,11 @@ ${arr[i]}`;
     },
     tool: {
       compact_chunk: tool({
-        description: "Replace an oversized chunk's raw body with a dense summary YOU write. The summary is the ONLY thing that remains in context afterwards - put the entire gist into the required 'summary' string. Never leave summary empty. Never put the explanation in any other field; there are no other fields. Copy over the decisions, verdicts, numbers, paths, exact errors and residual items that must survive. Call this for every chunk tagged !COMPACT or ?COMPACT in the current request. No length limit - longer is fine.",
+        description: "Compact a flagged chunk.",
         args: {
-          chunk_id: tool.schema.string().describe('The chunk key exactly as tagged, e.g. "603.2"'),
-          summary: tool.schema.string().describe("REQUIRED. The actual replacement text for the chunk, written by you - everything worth keeping from the original output. Bullets. Never empty. No length limit: include the verdict, decisions, exact numbers/paths/errors and what still remains to be done.")
+          chunk_id: tool.schema.string().describe('Chunk id, e.g. "3.1".'),
+          summary: tool.schema.string().describe("Required, non-empty. What mattered: paths, numbers, errors, decisions. Any length."),
+          reason: tool.schema.string().optional().describe("Optional. One short line.")
         },
         async execute(args, ctx) {
           const cfg = config();
@@ -1076,7 +1082,7 @@ ${arr[i]}`;
           const summary = String(args.summary ?? "").trim();
           if (!summary)
             return "REJECTED: empty summary.";
-          st.replaced.set(partId, { summary, wasChars: rec.outBytes, key });
+          st.replaced.set(partId, { summary, wasChars: rec.outBytes, key, reason: String(args.reason ?? "").slice(0, 200) });
           rec.flagged = false;
           persist(st);
           const pct = rec.outBytes ? Math.round((1 - summary.length / rec.outBytes) * 100) : 0;
@@ -1176,8 +1182,9 @@ export default Plugin.define({
           input: {
             type: "object",
             properties: {
-              chunk_id: { type: "string", description: 'The chunk key exactly as tagged, e.g. "603.2"' },
-              summary: { type: "string", description: "REQUIRED. The actual replacement text for the chunk, written by you - everything worth keeping from the original output. Bullets. Never empty. No length limit: include the verdict, decisions, exact numbers/paths/errors and what still remains to be done." }
+              chunk_id: { type: "string", description: 'Chunk id, e.g. "3.1".' },
+              summary: { type: "string", description: "Required, non-empty. What mattered: paths, numbers, errors, decisions. Any length." },
+              reason: { type: "string", description: "Optional. One short line." }
             },
             required: ["chunk_id", "summary"],
             additionalProperties: false
