@@ -6,12 +6,6 @@
 - compact_chunk schema simplified: one-line description, terse field docs, chunk_id and summary required, reason optional again. No length limits.
 
 
-## 1.0.3 - 2026-11-21
-
-- Tool description now states that the summary string is the ONLY thing that remains in context, that it must be written in full there, and that there are no other fields to put it in.
-- Summary argument renamed in docs: REQUIRED, bullets, no length limit, include verdict/decisions/numbers/paths/errors/next steps.
-
-
 ## 1.0.2 - 2026-11-21
 
 - compact_chunk takes only two fields now: chunk_id and summary. The optional reason field is gone; models were putting their text there and leaving summary empty, which produced reject loops.
